@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Interaktive Karte: Bündnisse im Ersten Weltkrieg</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <style>
+    #map { height: 100vh; }
+    .legend {
+      background: white;
+      padding: 10px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.geoman@2.13.0/dist/leaflet-geoman.min.js"></script>
+  <script src="https://unpkg.com/leaflet-providers@1.13.0/leaflet-providers.min.js"></script>
+  <script>
+    const map = L.map('map').setView([48.5, 10.5], 4);
+    L.tileLayer.provider('CartoDB.Positron').addTo(map);
+
+    const countries = {
+      "Entente": {
+        color: '#007bff',
+        members: ["France", "United Kingdom", "Russia", "Italy", "Serbia", "Belgium", "Japan", "Portugal", "Romania", "Greece", "United States", "Montenegro"]
+      },
+      "Mittelmaechte": {
+        color: '#dc3545',
+        members: ["Germany", "Austria", "Turkey", "Bulgaria"]
+      },
+      "Neutral": {
+        color: '#cccccc',
+        members: ["Switzerland", "Spain", "Norway", "Sweden", "Netherlands", "Denmark"]
+      }
+    };
+
+    fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
+      .then(res => res.json())
+      .then(data => {
+        L.geoJSON(data, {
+          style: feature => {
+            const name = feature.properties.name;
+            for (let group in countries) {
+              if (countries[group].members.includes(name)) {
+                return { color: countries[group].color, weight: 1, fillOpacity: 0.6 };
+              }
+            }
+            return { color: '#666', weight: 1, fillOpacity: 0.2 };
+          },
+          onEachFeature: (feature, layer) => {
+            const name = feature.properties.name;
+            let groupLabel = "Unbeteiligt";
+            for (let group in countries) {
+              if (countries[group].members.includes(name)) {
+                groupLabel = group;
+              }
+            }
+            layer.bindPopup(`<strong>${name}</strong><br>${groupLabel}`);
+          }
+        }).addTo(map);
+      });
+
+    const legend = L.control({position: 'bottomright'});
+    legend.onAdd = function(map) {
+      const div = L.DomUtil.create('div', 'legend');
+      div.innerHTML += '<strong>Bündnisse (1914–1918)</strong><br>';
+      div.innerHTML += '<i style="background:#007bff;width:12px;height:12px;display:inline-block;margin-right:5px;"></i> Entente<br>';
+      div.innerHTML += '<i style="background:#dc3545;width:12px;height:12px;display:inline-block;margin-right:5px;"></i> Mittelmächte<br>';
+      div.innerHTML += '<i style="background:#cccccc;width:12px;height:12px;display:inline-block;margin-right:5px;"></i> Neutral';
+      return div;
+    };
+    legend.addTo(map);
+  </script>
+</body>
+</html>
