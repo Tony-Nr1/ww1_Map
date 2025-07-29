@@ -38,7 +38,7 @@
       }
     };
 
-    fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
+    fetch('countries.geo.json')
       .then(res => res.json())
       .then(data => {
         L.geoJSON(data, {
